@@ -1,0 +1,6 @@
+drug_id,seeding_density,drugset_id,assay,duration
+1062,3200,506_e_6,a,3
+-1,800,506_e_6,a,3
+1046,500,506_a_5,a,3
+1016,800,505_a_6,a,3
+1026,1600,506_f_6,a,3

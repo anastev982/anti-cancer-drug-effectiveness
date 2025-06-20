@@ -1,0 +1,2 @@
+research_project,barcode,scan_id,date_created,scan_date,cell_id,master_cell_id,cosmic_id,cell_line_name,sanger_model_id,seeding_density,drugset_id,assay,duration,position,tag,drug_id,conc,intensity
+GDSC_SA,3230,2945,2015-02-13T00:00:00Z,2015-02-17T00:00:00Z,4712,198,753608,PC-14,SIDM00237,250,159,Glo,4,1,UN-USED,,,0

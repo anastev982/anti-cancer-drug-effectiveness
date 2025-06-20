@@ -1,0 +1,6 @@
+gene_id,symbol,effect,drug_id
+SIDG16764,LRP1B,ess_splice,-1
+SIDG07949,ERG,missense,-1
+SIDG20308,MSH2,frameshift,-1
+SIDG01359,ARHGAP5,nonsense,-1
+SIDG02496,BRCA1,frameshift,-1
