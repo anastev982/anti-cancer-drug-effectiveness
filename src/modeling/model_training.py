@@ -17,9 +17,7 @@ from sklearn.model_selection import GridSearchCV, cross_val_score
 from src.modeling.pipeline import build_pipeline
 
 
-# ---------------------------------------------------------------------------
 # Evaluation utilities
-# ---------------------------------------------------------------------------
 
 
 def evaluate_model(model, x_test, y_test):

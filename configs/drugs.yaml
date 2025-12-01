@@ -1,0 +1,15 @@
+data:
+  table: data/final_merged.parquet
+  target: drug_response
+
+model:
+  type: RandomForestRegressor
+  params:
+    n_estimators: 300
+    max_depth: null
+    random_state: 42
+
+training:
+  test_size: 0.2
+  cv_folds: 5
+  scoring: neg_mean_squared_error

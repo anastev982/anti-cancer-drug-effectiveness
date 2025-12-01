@@ -1,0 +1,9 @@
+experiment:
+  seed: 42
+
+paths:
+  data: data
+  outputs: outputs
+
+plots:
+  outdir: outputs/plots

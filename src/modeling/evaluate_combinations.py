@@ -1,63 +1,113 @@
-import pandas as pd
-import matplotlib.pyplot as plt
+import os
+import logging
 from itertools import combinations
+from typing import List
+
+import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_squared_error
-import logging
 
-logging.basicConfig(level=logging.INFO)
+# Logging configuration
+
+logging.basicConfig(level=logging.INFO, format="%(message)s")
 logger = logging.getLogger(__name__)
 
-# === Load the filtered dataset ===
-df = pd.read_parquet("final_features/subset_genes_only.parquet")
-top_genes = [
-    "mstn",
-    "bambi",
-    "tmt1a",
-    "sfmbt1",
+
+# Constants
+
+CHUNK_DIR = "final_chunks"
+OUTPUT_PATH = "outputs/top_combos_per_chunk.csv"
+
+TARGET_COL = "LN_IC50"
+
+TOP_GENES: List[str] = [
     "fcrl6",
-    "aifm2",
-    "pfn2",
-    "fyn",
-    "lrrc37a2",
     "osbp2",
+    "bambi",
+    "lrrc37a2",
+    "fyn",
+    "tmt1a",
+    "aifm2",
+    "mstn",
+    "sfmbt1",
+    "pfn2",
 ]
 
-results = []
+TEST_SIZE = 0.2
+RANDOM_STATE = 42
+N_ESTIMATORS = 200
 
-for r in range(2, len(top_genes) + 1):
-    for combo in combinations(top_genes, r):
-        X = df[list(combo)]
-        y = df["LN_IC50"]
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, test_size=0.2, random_state=42
-        )
 
-        model = RandomForestRegressor(random_state=42)
-        model.fit(X_train, y_train)
-        y_pred = model.predict(X_test)
-        mse = mean_squared_error(y_test, y_pred)
+def evaluate_combinations_in_chunk(df: pd.DataFrame, chunk_name: str) -> List[dict]:
+    """
+    Evaluate all combinations (size 2 to len(TOP_GENES)) of selected genes
+    inside a single chunk. For each combination, train a RandomForestRegressor
+    and compute the MSE.
 
-        results.append({"genes": ",".join(combo), "num_genes": r, "mse": mse})
-        logger.info(f"MSE for {combo}: {mse:.4f}")
+    Returns a list of dicts, each representing a result row.
+    """
+    results = []
+    y = df[TARGET_COL]
 
-# Save results
-results_df = pd.DataFrame(results)
-results_df.to_csv("outputs/gene_combination_mse.csv", index=False)
+    for k in range(2, len(TOP_GENES) + 1):
+        logger.info(f"  Checking combinations of size {k} ...")
 
-# Plot
-avg_mse = results_df.groupby("num_genes")["mse"].mean().reset_index()
-plt.figure(figsize=(8, 5))
-plt.plot(avg_mse["num_genes"], avg_mse["mse"], marker="o")
-plt.title("Average MSE vs Number of Genes Used")
-plt.xlabel("Number of Genes")
-plt.ylabel("Average MSE")
-plt.grid(True)
-plt.tight_layout()
-plt.savefig("outputs/gene_combination_mse_plot.png")
-plt.close()
+        for combo in combinations(TOP_GENES, k):
+            X = df[list(combo)]
 
-logger.info(
-    "Finished. Results saved to 'outputs/gene_combination_mse.csv' and plot to 'gene_combination_mse_plot.png'."
-)
+            try:
+                X_train, X_test, y_train, y_test = train_test_split(
+                    X, y, test_size=TEST_SIZE, random_state=RANDOM_STATE
+                )
+
+                model = RandomForestRegressor(
+                    random_state=RANDOM_STATE, n_estimators=N_ESTIMATORS
+                )
+                model.fit(X_train, y_train)
+                preds = model.predict(X_test)
+                mse = mean_squared_error(y_test, preds)
+
+                results.append(
+                    {
+                        "chunk": chunk_name,
+                        "genes": ",".join(combo),
+                        "num_genes": k,
+                        "mse": mse,
+                    }
+                )
+
+            except Exception as e:
+                logger.warning(f"    Skipping combo {combo} in {chunk_name}: {e}")
+
+    return results
+
+
+def process_all_chunks() -> pd.DataFrame:
+    """
+    Loop over all parquet chunks in CHUNK_DIR,
+    evaluate gene combinations for each chunk,
+    and aggregate results into a single DataFrame.
+    """
+    all_results = []
+
+    for fname in sorted(os.listdir(CHUNK_DIR)):
+        if fname.endswith(".parquet"):
+            chunk_path = os.path.join(CHUNK_DIR, fname)
+            logger.info(f"\nProcessing chunk: {fname}")
+
+            df = pd.read_parquet(chunk_path)
+            chunk_results = evaluate_combinations_in_chunk(df, fname)
+            all_results.extend(chunk_results)
+
+    return pd.DataFrame(all_results)
+
+
+if __name__ == "__main__":
+    logger.info("Starting chunk-level evaluation...")
+
+    results_df = process_all_chunks()
+    results_df.to_csv(OUTPUT_PATH, index=False)
+
+    logger.info(f"\nSaved all results to: {OUTPUT_PATH}")
+    logger.info("Done.")

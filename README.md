@@ -1,53 +1,190 @@
-# Predicting Anti-Cancer Drug Effectiveness from Molecular Data
+Predicting Anti-Cancer Drug Effectiveness from Molecular Data
 
-This project focuses on predicting the effectiveness of anti-cancer drugs using genomic and molecular-level data. It combines powerful data science tools, feature engineering, and machine learning to support better drug response prediction.
+This project builds a machine-learning pipeline for predicting anti-cancer drug response (LN_IC50) using genomic mutation data.
+The goal is to understand which genes — individually and in combination — provide the strongest predictive signal for drug sensitivity.
 
-## Project Structure
+The project includes:
 
-├── data/ # Raw and processed data (excluded from Git)
-├── final_features/ # Final features used for modeling
-├── outputs/ # Model results, logs, plots
-├── src/ # Source code
-│ ├── dataloader.py
-│ ├── features/
-│ ├── modeling/
-│ └── visualization/
-├── .gitignore
-├── requirements.txt
-└── README.md
+Large-scale preprocessing of molecular and mutation datasets
 
-## Technologies Used
+Construction of gene-level feature matrices (20k+ genomic features)
 
-- Python 3.12+
-- Dask
-- Pandas
-- Scikit-learn
-- Matplotlib / Seaborn
-- Jupyter (optional for experiments)
+Evaluation of thousands of gene combinations using Random Forest models
 
-## Workflow Summary
+Identification of top predictive genes and gene groups
 
-1. Load & clean data – Integrate and filter molecular, gene, and drug metadata.
-2. Feature engineering – Build sparse mutation matrices and gene-target profiles.
-3. Modeling – Use ML models like Random Forest to predict drug response.
-4. Evaluation – Analyze results via MSE and feature importance metrics.
+Chunk-level analysis for validation stability
 
-## Key Goals
+Fully reproducible ML pipeline
 
-- Predict drug effectiveness (e.g., IC50) for cell lines.
-- Identify top-performing gene combinations.
-- Optimize model performance across various data chunks.
+Project Structure
 
-## Disclaimer
+── data/ # Raw & intermediate data (ignored by Git)
+── final_features/ # Final Parquet feature sets used for modeling
+── final_chunks/ # Small Parquet chunks for rapid evaluation
+── outputs/ # Plots, metrics, ranked genes, MSE scores
 
-Some datasets are excluded from this repository due to size (e.g., `.parquet`, `.csv`) or privacy concerns. See `.gitignore` for details.
+── src/
+── preprocessing/ # Building informative subsets & chunking
+── modeling/ # ML models, training scripts, evaluation
+── analysis/ # Gene ranking, combo evaluation, stats
+── utils/ # Helper functions (optional)
 
-## To Do
+── requirements.txt
+── README.md
 
-- [ ] Add model comparison
-- [ ] Integrate GitHub Actions (CI)
-- [ ] Improve data documentation
+Project Motivation
 
----
+Drug response prediction is a core challenge in precision oncology.
+By modeling molecular features (gene mutations), we aim to:
 
-Want to contribute? Ideas or questions? Feel free to open an issue or get in touch.
+predict IC50/LN_IC50 drug sensitivity
+
+identify high-impact genes
+
+discover robust multi-gene combinations
+
+support future feature selection and biomarker discovery
+
+Pipeline Overview
+
+1. Preprocessing & Feature Engineering
+
+Load multiple genomic datasets (.parquet, .csv)
+
+Merge mutation matrices, gene metadata, drug metadata
+
+Build:
+
+full_model_input.parquet (20k+ genes)
+
+subset_genes_only.parquet (gene + target)
+
+subset_informative.parquet (filtered genes with variance > 1)
+
+Chunk large datasets into final_chunks/ for faster experiments
+
+2. Gene-Level Evaluation
+
+Evaluate each gene individually:
+
+Train Random Forest on each gene separately
+
+Compute MSE per gene
+
+Identify top N most predictive genes
+
+Save results & plots
+
+3. Multi-Gene Combination Search
+
+For selected top genes:
+
+Generate combinations (2–10 genes)
+
+Train RF model for each combination
+
+Rank combinations by MSE
+
+Save:
+
+best combos per chunk
+
+global ranked combos
+
+plots showing MSE vs number of genes
+
+This mimics feature-selection strategies used in real computational oncology research.
+
+4. Chunk-Level Robustness
+
+To avoid bias:
+
+Split filtered dataset into 50-row chunks
+
+Evaluate combinations on each chunk
+
+Count how often each gene appears in top combinations
+
+Extract robust genes across data splits
+
+5. Final Model
+
+Train on the full dataset using optimal gene combinations.
+
+Supported metrics:
+
+MSE
+
+R²
+
+Feature importance
+
+Key Results (Short Summary)
+
+(You can update these once you upload your plots and outputs.)
+
+Top single genes by predictive power:
+mstn, bambi, tmt1a, fcrl6, osbp2
+
+Best gene combinations reached MSE ≈ X.XX
+
+Multi-gene models outperform single-gene models in all experiments
+
+Chunk-level consistency confirms biological stability of selected genes
+
+Technologies Used
+
+Languages & Libraries
+
+Python 3.12
+
+Pandas, NumPy
+
+Dask (large-scale processing)
+
+Scikit-learn
+
+Matplotlib / Seaborn
+
+PyArrow / Parquet
+
+How to Run
+Install requirements:
+pip install -r requirements.txt
+
+Run key scripts:
+Build informative subset:
+python -m src.preprocessing.build_subset_informative
+
+Chunk dataset:
+python -m src.preprocessing.chunk_subset_genes
+
+Evaluate gene combinations:
+python -m src.modeling.evaluate_combos_over_chunks
+
+Train selected genes:
+python -m src.modeling.train_selected_genes --genes mstn bambi tmt1a
+
+Analyze gene frequency across combinations:
+python -m src.analysis.top_genes_across_chunks
+
+Data Disclaimer
+
+Large .parquet files are not included due to GitHub size limits.
+Outputs, plots, and intermediate results are saved inside the repo structure but heavy datasets are excluded via .gitignore.
+
+Future Improvements
+
+Add Gradient Boosting / XGBoost comparison
+
+Implement SHAP value interpretability
+
+Add experiment tracking (MLflow)
+
+Add GitHub Actions for automated testing
+
+Contact
+
+If you have questions or ideas, feel free to open an Issue or reach out.
+This project was created as part of a broader effort in molecular data analysis and precision oncology research.
