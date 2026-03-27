@@ -1,190 +1,193 @@
-Predicting Anti-Cancer Drug Effectiveness from Molecular Data
+# Predicting Anti-Cancer Drug Effectiveness from Molecular Data
 
-This project builds a machine-learning pipeline for predicting anti-cancer drug response (LN_IC50) using genomic mutation data.
-The goal is to understand which genes — individually and in combination — provide the strongest predictive signal for drug sensitivity.
+## Overview
 
-The project includes:
+This project explores how molecular mutation data can be used to predict anti-cancer drug response (`LN_IC50`) through a full machine learning pipeline. Rather than starting from a clean, modeling-ready table, I worked with raw biomedical datasets that required extensive cleaning, validation, merging, and restructuring before modeling could even begin.
 
-Large-scale preprocessing of molecular and mutation datasets
+The project combines **data preprocessing, feature engineering, large-scale chunked processing, and machine learning evaluation** to identify which genes — individually and in combination — provide the strongest predictive signal for drug sensitivity.
 
-Construction of gene-level feature matrices (20k+ genomic features)
+This repository reflects a realistic data science workflow: not just training a model, but solving the practical challenges of turning messy, high-dimensional biological data into a usable analytical pipeline.
 
-Evaluation of thousands of gene combinations using Random Forest models
+---
 
-Identification of top predictive genes and gene groups
+## Why this project matters
 
-Chunk-level analysis for validation stability
+Drug response prediction is an important problem in precision oncology. The long-term goal of this type of work is to better understand which molecular signals may be associated with sensitivity or resistance to treatment.
 
-Fully reproducible ML pipeline
+In this project, I focused on:
 
-Project Structure
+- predicting drug response from mutation-based molecular features
+- identifying informative genes with strong predictive value
+- comparing single-gene vs multi-gene models
+- evaluating whether top signals remain stable across data chunks
+- building a reproducible pipeline for further feature selection and modeling
 
-── data/ # Raw & intermediate data (ignored by Git)
-── final_features/ # Final Parquet feature sets used for modeling
-── final_chunks/ # Small Parquet chunks for rapid evaluation
-── outputs/ # Plots, metrics, ranked genes, MSE scores
+---
 
-── src/
-── preprocessing/ # Building informative subsets & chunking
-── modeling/ # ML models, training scripts, evaluation
-── analysis/ # Gene ranking, combo evaluation, stats
-── utils/ # Helper functions (optional)
+## What makes this project interesting
 
-── requirements.txt
-── README.md
+This was not a “plug in a clean dataset and train a model” type of project.
 
-Project Motivation
+A large part of the work involved dealing with real-world problems such as:
 
-Drug response prediction is a core challenge in precision oncology.
-By modeling molecular features (gene mutations), we aim to:
+- **raw, non-curated datasets**
+- **many columns with high missingness**
+- **large file sizes and memory constraints**
+- **iterative chunk-size tuning to make processing feasible**
+- **careful filtering of invalid or low-value columns before modeling**
 
-predict IC50/LN_IC50 drug sensitivity
+One of the biggest lessons from this project was that real machine learning work is often less about choosing a model and more about making the data usable, reliable, and computationally manageable.
 
-identify high-impact genes
+---
 
-discover robust multi-gene combinations
+## Technical challenges solved
 
-support future feature selection and biomarker discovery
+### 1. Data cleaning and validation
 
-Pipeline Overview
+The original datasets were not analysis-ready. I spent significant time inspecting missing values, identifying unreliable columns, and deciding which features were too incomplete to keep in the pipeline.
 
-1. Preprocessing & Feature Engineering
+### 2. Large-scale processing
 
-Load multiple genomic datasets (.parquet, .csv)
+Because the dataset was large, I could not treat preprocessing as a small in-memory task. I had to iteratively adjust chunk sizes and processing strategy to avoid memory bottlenecks and freezing during execution.
 
-Merge mutation matrices, gene metadata, drug metadata
+### 3. High-dimensional feature space
 
-Build:
+The project works with mutation-derived molecular features at genomic scale, which required transforming the data into structured feature matrices suitable for downstream model evaluation.
 
-full_model_input.parquet (20k+ genes)
+### 4. Reproducible pipeline design
 
-subset_genes_only.parquet (gene + target)
+Instead of keeping everything inside one notebook, I organized the workflow into reusable scripts and pipeline steps so the project could be rerun and extended more easily.
 
-subset_informative.parquet (filtered genes with variance > 1)
+---
 
-Chunk large datasets into final_chunks/ for faster experiments
+## Pipeline summary
 
-2. Gene-Level Evaluation
+### Step 1 — Data preprocessing
 
-Evaluate each gene individually:
+- Load raw molecular, mutation, and metadata files
+- Clean inconsistent or incomplete columns
+- Remove unusable high-missingness features
+- Merge mutation, gene, and drug-related data
+- Save structured intermediate outputs
 
-Train Random Forest on each gene separately
+### Step 2 — Feature engineering
 
-Compute MSE per gene
+- Build model-ready datasets from cleaned molecular information
+- Create subsets for more focused experiments
+- Filter informative features
+- Save feature matrices as Parquet files for efficient reuse
 
-Identify top N most predictive genes
+### Step 3 — Chunk-based processing
 
-Save results & plots
+- Split large datasets into smaller chunks
+- Run experiments more efficiently on local hardware
+- Reduce memory pressure during exploratory modeling
+- Enable more robust comparison across subsets of the data
 
-3. Multi-Gene Combination Search
+### Step 4 — Gene-level modeling
 
-For selected top genes:
+- Evaluate genes individually
+- Train Random Forest models on selected inputs
+- Rank genes by predictive performance
+- Save ranked outputs and plots
 
-Generate combinations (2–10 genes)
+### Step 5 — Multi-gene combination experiments
 
-Train RF model for each combination
+- Generate combinations of top-performing genes
+- Compare predictive performance across combinations
+- Analyze whether combining genes improves over single-gene models
+- Identify stronger candidate feature groups
 
-Rank combinations by MSE
+### Step 6 — Robustness analysis
 
-Save:
+- Compare top genes and combinations across chunks
+- Measure how consistently strong predictors reappear
+- Use chunk-level stability as an additional signal of robustness
 
-best combos per chunk
+---
 
-global ranked combos
+## Tools and technologies
 
-plots showing MSE vs number of genes
+- **Python 3**
+- **Pandas**
+- **NumPy**
+- **Dask**
+- **Scikit-learn**
+- **PyArrow / Parquet**
+- **Matplotlib**
+- **Jupyter Notebook**
 
-This mimics feature-selection strategies used in real computational oncology research.
+---
 
-4. Chunk-Level Robustness
+## Repository structure
 
-To avoid bias:
+```text
+anti-cancer-drug-effectiveness/
+├── archive/                  # Older or archived files
+├── cleaned/                  # Cleaned outputs
+├── configs/                  # Configuration files
+├── data/                     # Raw and intermediate datasets
+├── final_chunks/             # Chunked datasets for scalable experiments
+├── final_features/           # Final feature tables used for modeling
+├── notebooks/                # Exploration and notebook-based analysis
+├── outputs/                  # Results, rankings, plots, and exported metrics
+├── src/                      # Source code for preprocessing and modeling
+├── README.md
+├── requirements.txt
+└── run.py
 
-Split filtered dataset into 50-row chunks
+Selected results
 
-Evaluate combinations on each chunk
+This project focuses on both predictive performance and feature discovery.
 
-Count how often each gene appears in top combinations
+Current findings from the workflow include:
 
-Extract robust genes across data splits
+identification of top-performing single genes for prediction
+evidence that multi-gene models outperform single-gene models
+chunk-level comparisons to assess which genes remain informative across splits
+a reproducible foundation for future feature selection and model comparison
 
-5. Final Model
+Note: This section can be expanded with final metrics, plots, and best-performing gene combinations once the analysis is finalized.
 
-Train on the full dataset using optimal gene combinations.
+What I learned
 
-Supported metrics:
+This project strengthened my practical understanding of:
 
-MSE
+real-world data cleaning
+handling missing and imperfect biological data
+memory-aware preprocessing on large datasets
+building reproducible ML workflows
+feature selection thinking in a biomedical context
+balancing modeling goals with computational limitations
 
-R²
+Most importantly, it showed me that meaningful machine learning projects are built long before the final model is trained.
 
-Feature importance
+How to run
 
-Key Results (Short Summary)
+Install dependencies:
 
-(You can update these once you upload your plots and outputs.)
-
-Top single genes by predictive power:
-mstn, bambi, tmt1a, fcrl6, osbp2
-
-Best gene combinations reached MSE ≈ X.XX
-
-Multi-gene models outperform single-gene models in all experiments
-
-Chunk-level consistency confirms biological stability of selected genes
-
-Technologies Used
-
-Languages & Libraries
-
-Python 3.12
-
-Pandas, NumPy
-
-Dask (large-scale processing)
-
-Scikit-learn
-
-Matplotlib / Seaborn
-
-PyArrow / Parquet
-
-How to Run
-Install requirements:
 pip install -r requirements.txt
 
-Run key scripts:
-Build informative subset:
-python -m src.preprocessing.build_subset_informative
+Run the main pipeline:
 
-Chunk dataset:
-python -m src.preprocessing.chunk_subset_genes
+python src/main.py
 
-Evaluate gene combinations:
-python -m src.modeling.evaluate_combos_over_chunks
+Depending on the workflow stage, additional preprocessing or modeling scripts can be run from the src/ directory.
 
-Train selected genes:
-python -m src.modeling.train_selected_genes --genes mstn bambi tmt1a
+Future improvements
 
-Analyze gene frequency across combinations:
-python -m src.analysis.top_genes_across_chunks
+Planned next steps include:
 
-Data Disclaimer
+comparing additional model families beyond Random Forest
+improving feature selection strategies
+adding clearer experiment tracking and evaluation summaries
+visualizing top genes and combinations more systematically
+exploring more advanced biological interpretation of selected features
+building a lightweight dashboard for presenting results
 
-Large .parquet files are not included due to GitHub size limits.
-Outputs, plots, and intermediate results are saved inside the repo structure but heavy datasets are excluded via .gitignore.
+About this project
 
-Future Improvements
+I built this project to practice end-to-end data science on a realistic biomedical problem: from messy raw data to structured features and model evaluation.
 
-Add Gradient Boosting / XGBoost comparison
-
-Implement SHAP value interpretability
-
-Add experiment tracking (MLflow)
-
-Add GitHub Actions for automated testing
-
-Contact
-
-If you have questions or ideas, feel free to open an Issue or reach out.
-This project was created as part of a broader effort in molecular data analysis and precision oncology research.
+What makes it meaningful to me is not only the final model, but the full process of solving data quality, scale, and reproducibility challenges along the way.
+```
