@@ -115,7 +115,6 @@ Instead of keeping everything inside one notebook, I organized the workflow into
 - **Scikit-learn**
 - **PyArrow / Parquet**
 - **Matplotlib**
-- **Jupyter Notebook**
 
 ---
 
@@ -137,11 +136,11 @@ anti-cancer-drug-effectiveness/
 └── run.py
 ```
 
-Selected results
+### Selected results
 
 This project focuses on both predictive performance and feature discovery.
 
-Current findings from the workflow include:
+## Current findings from the workflow include:
 
 identification of top-performing single genes for prediction
 evidence that multi-gene models outperform single-gene models
@@ -150,7 +149,7 @@ a reproducible foundation for future feature selection and model comparison
 
 Note: This section can be expanded with final metrics, plots, and best-performing gene combinations once the analysis is finalized.
 
-What I learned
+## What I learned
 
 This project strengthened my practical understanding of:
 
@@ -163,7 +162,7 @@ balancing modeling goals with computational limitations
 
 Most importantly, it showed me that meaningful machine learning projects are built long before the final model is trained.
 
-How to run
+## How to run
 
 Install dependencies:
 
@@ -175,7 +174,7 @@ python src/main.py
 
 Depending on the workflow stage, additional preprocessing or modeling scripts can be run from the src/ directory.
 
-Future improvements
+### Future improvements
 
 Planned next steps include:
 
@@ -186,7 +185,7 @@ visualizing top genes and combinations more systematically
 exploring more advanced biological interpretation of selected features
 building a lightweight dashboard for presenting results
 
-About this project
+### About this project
 
 I built this project to practice end-to-end data science on a realistic biomedical problem: from messy raw data to structured features and model evaluation.
 
